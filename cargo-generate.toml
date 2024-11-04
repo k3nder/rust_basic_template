@@ -1,0 +1,21 @@
+[template]
+exclude = ["post-script.rhai", "pre-script.rhai"]
+ignore = [".idea", ".git"]
+# Variables predefinidas para el template
+# `project-name` es una variable especial que siempre existe y es el nombre del proyecto.
+
+# Definir una nueva variable adicional llamada "author"
+[conditional.'crate_type == "lib"']
+ignore=["src/main.rs"]
+
+[conditional.'crate_type == "bin"']
+ignore=["src/lib.rs"]
+
+[placeholders]
+description = { type = "string", prompt = "Description of the project?" }
+license = { type = "string", prompt = "License", default = "GPL-3.0-only" }
+year = { type = "string", prompt = "Edition?", choices = [ "2015", "2018", "2021", "2024" ], default = "2021" }
+
+[hooks]
+pre = ["pre-script.rhai"]
+post = ["post-script.rhai"]

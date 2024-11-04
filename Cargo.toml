@@ -1,0 +1,11 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+authors = ["{{authors}}"]
+edition = "{{year}}"
+license = "{{license}}"
+
+[dependencies]
+log = "0.4.22"
+env_logger = "0.11.5"
+

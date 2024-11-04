@@ -1,0 +1,75 @@
+name: Publish to crates.io
+
+on:
+  push:
+    tags:
+      - "v*.*.*"  # Ejecutar cuando se crea un tag de versión (v1.0.0, v2.1.3, etc.)
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cargo check
+        run: cargo check
+
+      - name: Cargo test
+        run: cargo test
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: check
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable  # Usa la herramienta Rust estable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      - name: Build the project
+        run: cargo build --release
+
+      - name: Set tag name output
+        id: get_tag_name
+        run: echo "tag_name=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Publish into release
+        uses: softprops/action-gh-release
+        with:
+          files: target/release/*
+          tag_name: ${{ env.tag_name }}
+          name: ${{ github.repository }}-${{ env.tag_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --allow-dirty
